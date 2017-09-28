@@ -11,6 +11,7 @@ import java.util.List;
 */
 public class CustomTree extends AbstractList<String> implements Serializable, Cloneable {
     Entry<String> root;
+    int sizeOfTree = 0;
 
     @Override
     public String get(int index) {
@@ -53,17 +54,47 @@ public class CustomTree extends AbstractList<String> implements Serializable, Cl
         return 0;
     }
 
+    private boolean add(String s, Entry<String> curEntry, int curLevel) {
+        if (curEntry.lineNumber == curLevel) {
+            if (curEntry.isAvailableToAddChildren()) {
+                Entry<String> newEntry = new Entry<>(s);
+                if (curEntry.availableToAddLeftChildren)
+                    curEntry.leftChild = newEntry;
+                else if (curEntry.availableToAddRightChildren)
+                    curEntry.rightChild = newEntry;
+                newEntry.parent = curEntry;
+                newEntry.lineNumber = curEntry.lineNumber+1;
+                curEntry.checkChildren();
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+        else
+            return add(s,curEntry.leftChild,curLevel) || add(s,curEntry.rightChild,curLevel);
+    }
+
     @Override
     public boolean add(String s) {
-        boolean isAdded = false;
-        List<Entry<String>> curLevelEntries = new ArrayList<>();
-        curLevelEntries.add(root);
-        while(!isAdded){
-            for(Entry<String> it: curLevelEntries){
-                if (it.isAvailableToAddChildren()){
-
+        try {
+            if (root == null) {
+                root = new Entry<>(s);
+                root.lineNumber = 0;
+                sizeOfTree++;
+                return true;
+            } else {
+                int curLevel = 0;
+                while (!add(s, root, curLevel)) {
+                    curLevel++;
                 }
+                sizeOfTree++;
+                return true;
             }
+        }
+        catch (Exception e){
+            e.printStackTrace();
+            return false;
         }
     }
 
@@ -100,7 +131,7 @@ public class CustomTree extends AbstractList<String> implements Serializable, Cl
             list.add(String.valueOf(i));
         }
         //System.out.println("Expected 3, actual is " + ((CustomTree) list).getParent("8"));
-        list.remove("5");
+        //list.remove("5");
         //System.out.println("Expected null, actual is " + ((CustomTree) list).getParent("11"));
     }
 }
