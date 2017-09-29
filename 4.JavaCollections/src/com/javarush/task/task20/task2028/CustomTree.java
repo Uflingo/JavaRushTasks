@@ -51,10 +51,12 @@ public class CustomTree extends AbstractList<String> implements Serializable, Cl
 
     @Override
     public int size() {
-        return 0;
+        return sizeOfTree;
     }
 
     private boolean add(String s, Entry<String> curEntry, int curLevel) {
+        if (curEntry == null)
+            return false;
         if (curEntry.lineNumber == curLevel) {
             if (curEntry.isAvailableToAddChildren()) {
                 Entry<String> newEntry = new Entry<>(s);
@@ -98,6 +100,66 @@ public class CustomTree extends AbstractList<String> implements Serializable, Cl
         }
     }
 
+    private Entry<String> findEntry(String s, Entry<String> entry){
+        if (entry == null)
+            return null;
+        else if (entry.elementName.equals(s))
+            return entry;
+        else{
+            Entry<String> leftEntry = findEntry(s,entry.leftChild);
+            if (leftEntry != null)
+                return leftEntry;
+            Entry<String> rightEntry = findEntry(s,entry.rightChild);
+            if (rightEntry!=null)
+                return rightEntry;
+            return null;
+        }
+    }
+
+    private int countElements(Entry<String> curElement){
+        if(curElement == null)
+            return 0;
+        else{
+            return countElements(curElement.leftChild) + countElements(curElement.rightChild) + 1;
+        }
+    }
+
+    private void dropTree(Entry<String> curEntry){
+        if(curEntry == null)
+            return;
+        dropTree(curEntry.leftChild);
+        dropTree(curEntry.rightChild);
+        curEntry = null;
+    }
+
+    @Override
+    public boolean remove(Object o){
+        String s = (String) o;
+        Entry<String> entryToDelete = findEntry(s, root);
+        if (entryToDelete != null){
+            Entry<String> parent = entryToDelete.parent;
+            int k = countElements(entryToDelete);
+            sizeOfTree -= k;
+            if (parent != null) {
+                if (parent.leftChild.elementName.equals(s))
+                    parent.leftChild = null;
+                else if (parent.rightChild.elementName.equals(s))
+                    parent.rightChild = null;
+            }
+            dropTree(entryToDelete);
+            return true;
+        }
+        else
+            return false;
+    }
+
+    public String getParent(String s){
+        Entry<String> neededElement = findEntry(s, root);
+        if (neededElement == null)
+            return null;
+        return neededElement.parent.elementName;
+    }
+
 
     static class Entry<T> implements Serializable{
 
@@ -127,11 +189,18 @@ public class CustomTree extends AbstractList<String> implements Serializable, Cl
 
     public static void main(String[] args) {
         List<String> list = new CustomTree();
-        for (int i = 1; i < 16; i++) {
+        for (int i = 0; i < 16; i++) {
             list.add(String.valueOf(i));
         }
-        //System.out.println("Expected 3, actual is " + ((CustomTree) list).getParent("8"));
-        //list.remove("5");
-        //System.out.println("Expected null, actual is " + ((CustomTree) list).getParent("11"));
+        System.out.println( ((CustomTree) list).size());
+        System.out.println(((CustomTree) list).getParent("15"));
+        list.remove("3");
+        System.out.println( ((CustomTree) list).size());
+        ((CustomTree) list).add("16");
+        System.out.println(((CustomTree) list).getParent("16"));
+        System.out.println( ((CustomTree) list).size());
+//        System.out.println("Expected 3, actual is " + ((CustomTree) list).getParent("8"));
+//        list.remove("5");
+//        System.out.println("Expected null, actual is " + ((CustomTree) list).getParent("11"));
     }
 }
